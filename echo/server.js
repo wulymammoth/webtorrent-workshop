@@ -16,22 +16,23 @@ const net           = require('net');
 const jsonStream    = require('duplex-json-stream');
 const logger        = console;
 const streamSet     = require('stream-set');
-const activeSockets = streamSet();
+const activeClients = streamSet();
 
 // data is an object (not a buffer because of jsonStream)
-const broadcast = (data) => activeSockets.forEach(socket => socket.write(data));
+const broadcast = (data) => activeClients.forEach(client => client.write(data))
 
-net.createServer(socket => {
+// turn socket into a JSON client w/ some logging
+const connectionHandler = (socket) => {
   logger.log('new connection');
+
   // Turn a transport stream into an duplex stream that parses from /
   // serializes to json
-  socket =
+  client =
     jsonStream(socket)
     .on('data', broadcast)
-    .on('close', () => logger.log(`[socket:close] sockets: ${activeSockets.size}`));
+    .on('close', () => logger.log(`[socket:close] clients: ${activeClients.size}`));
 
-  activeSockets.add(socket);
-}).listen(PORT, () => {
-  const socket = net.connect(PORT);
-  socket.on('connect', () => socket.destroy());
-});
+  activeClients.add(client);
+}
+
+net.createServer(connectionHandler).listen(PORT)
