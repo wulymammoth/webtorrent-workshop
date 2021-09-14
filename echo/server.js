@@ -11,28 +11,28 @@
 
  * Now, all you need to do is write the message received from one client to the remainder of clients.
  */
-const PORT          = 10000;
-const net           = require('net');
-const jsonStream    = require('duplex-json-stream');
-const logger        = console;
-const streamSet     = require('stream-set');
-const activeClients = streamSet();
+const PORT          = 10000
+const net           = require('net')
+const jsonStream    = require('duplex-json-stream')
+const logger        = console
+const streamSet     = require('stream-set')
+const activeClients = streamSet()
 
 // data is an object (not a buffer because of jsonStream)
 const broadcast = (data) => activeClients.forEach(client => client.write(data))
 
 // turn socket into a JSON client w/ some logging
 const connectionHandler = (socket) => {
-  logger.log('new connection');
+  logger.log('new connection')
 
   // Turn a transport stream into an duplex stream that parses from /
   // serializes to json
   client =
     jsonStream(socket)
     .on('data', broadcast)
-    .on('close', () => logger.log(`[socket:close] clients: ${activeClients.size}`));
+    .on('close', () => logger.log(`[socket:close] clients: ${activeClients.size}`))
 
-  activeClients.add(client);
+  activeClients.add(client)
 }
 
 net.createServer(connectionHandler).listen(PORT)

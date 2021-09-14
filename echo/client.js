@@ -5,18 +5,19 @@ const PORT       = 10000
 const HOST       = 'localhost'
 const net        = require('net')
 const jsonStream = require('duplex-json-stream')
-const user       = process.argv[2];
-const client     = jsonStream(net.connect(PORT, HOST)).on('data', console.log)
+const handle     = process.argv[2]
 
 class Message {
-  constructor(user, content) {
-    this.user = user
+  constructor(handle, content) {
+    this.handle = handle
     this.content = content.toString()
   }
 
   serialize() {
-    return { user: this.user, message: this.content }
+    return { handle: this.handle, message: this.content }
   }
 }
 
-process.stdin.on("data", (content) => client.write(new Message(user, content).serialize()))
+const receive = (data) => process.stdout.write(`[${data.handle}] ${data.message}`)
+const client  = jsonStream(net.connect(PORT, HOST)).on('data', receive)
+process.stdin.on("data", (content) => client.write(new Message(handle, content).serialize()))
